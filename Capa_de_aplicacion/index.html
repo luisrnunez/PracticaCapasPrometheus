@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f0f8ff;
+      color: #333;
+    }
+
+    .container {
+      display: flex;
+    }
+
+    .left-section {
+      width: 50%;
+      padding-right: 20px;
+      box-sizing: border-box;
+    }
+
+    .right-section {
+      width: 50%;
+      padding-left: 20px;
+      box-sizing: border-box;
+    }
+
+    h1, h2 {
+      margin-bottom: 20px;
+      color: #444;
+    }
+
+    textarea {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .notes-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .note {
+      width: 100px;
+      height: 100px;
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+    }
+
+    /* Colores de fondo para las notas */
+    .note:nth-child(1) { background-color: #ff6f61; }
+    .note:nth-child(2) { background-color: #ffcc5c; }
+    .note:nth-child(3) { background-color: #88d8b0; }
+    .note:nth-child(4) { background-color: #6b5b95; }
+    .note:nth-child(5) { background-color: #f7cac9; }
+    .note:nth-child(6) { background-color: #92a8d1; }
+    .note:nth-child(odd):not(:nth-child(1)) { background-color: #f4a582; }
+    .note:nth-child(even):not(:nth-child(2)) { background-color: #92c7c7; }
+
+  </style>
+  
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Sección izquierda -->
+    <div class="left-section">
+      <h1>Notas</h1>
+      <div>
+        <textarea id="noteContent" rows="4"></textarea><br>
+        <button onclick="addNote()">Agregar Nota</button>
+      </div>
+    </div>
+
+    <!-- Sección derecha -->
+    <div class="right-section">
+      <h2>Todas las Notas</h2>
+      <div id="notes" class="notes-container"></div>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+
+    socket.on('newNote', (note) => {
+      addNoteToDOM(note);
+    });
+
+    async function fetchNotes() {
+      const response = await fetch('/api/notas');
+      const notes = await response.json();
+      const notesDiv = document.getElementById('notes');
+      notesDiv.innerHTML = '';
+      notes.forEach(note => {
+        addNoteToDOM(note);
+      });
+    }
+
+    function addNoteToDOM(note) {
+      const noteDiv = document.createElement('div');
+      noteDiv.className = 'note';
+      noteDiv.innerText = note.contenido;
+      document.getElementById('notes').appendChild(noteDiv);
+    }
+
+    async function addNote() {
+      const noteContent = document.getElementById('noteContent').value;
+      if (!noteContent.trim()) {
+        alert('La nota no puede estar vacía');
+        return;
+      }
+      const response = await fetch('/api/notas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ contenido: noteContent })
+      });
+      const newNote = await response.json();
+      document.getElementById('noteContent').value = '';
+      //addNoteToDOM(newNote);
+    }
+
+    window.onload = fetchNotes;
+  </script>
+</body>
+</html>
